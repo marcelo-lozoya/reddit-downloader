@@ -1,6 +1,8 @@
 # Reddit-image-downloader
 
-Written in go.
+######Written in go.
+
+Downloads images from a subreddit into the project's root directory.
 
 ### Build
 
