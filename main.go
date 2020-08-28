@@ -2,20 +2,17 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
-
-	"github.com/marcelo-lozoya/reddit-downloader/cli"
 )
 
 func main() {
-	time.Now().Nanosecond()
+	appContainer := InitializeApp() // Initialize dependency injection container first!
+	downloader := appContainer.downloader
+	cli := appContainer.cli
 
 	start := time.Now()
 
-	li := cli.Cli{Commands: []cli.Command{}}
-
-	li.Init(os.Args)
+	downloader.MakeRequestForReddit(cli.GetArguments())
 
 	log.Println("took ", time.Since(start))
 }

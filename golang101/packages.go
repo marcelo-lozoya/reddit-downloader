@@ -1,9 +1,9 @@
-package presentation
+package golang101
 
 import (
 	"fmt"
 
-	"github.com/marcelo-lozoya/reddit-downloader/presentation/constants"
+	"github.com/marcelo-lozoya/reddit-downloader/golang101/constants"
 )
 
 func DoSomethingExported() {

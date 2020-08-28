@@ -2,10 +2,11 @@ package cli
 
 import (
 	"log"
+	"os"
 	"strconv"
-
-	"github.com/marcelo-lozoya/reddit-downloader/downloader"
 )
+
+const LIMIT = 25
 
 // Command takes a name and datatype for the command
 type Command struct {
@@ -13,43 +14,26 @@ type Command struct {
 	Value string
 }
 
-const LIMIT = 25
+// Our interface for Cli...we only need a getter for the data
+type ICli interface {
+	GetArguments() (subreddit string, limit int)
+}
 
-// Cli initializes the arguments required for the app
+// Our concrete implementation of ICli - merely a container for data (no dependencies)
 type Cli struct {
-	Commands []Command
+	Subreddit string
+	Limit     int
 }
 
-// ParseArgs takes in os.Args and parses the system args
-func (r *Cli) ParseArgs(args []string) []Command {
-	requiredArgs := args[1:]
-
-	if !(len(requiredArgs) > 0) {
-		log.Fatal("No arguments were provided")
-	}
-
-	for i, v := range requiredArgs {
-		if i%2 == 1 {
-			continue
-		}
-
-		if i == 0 && v != "--subr" {
-			log.Fatal("First argument should be --subr _subredditname_")
-		}
-
-		r.Commands = append(r.Commands, Command{
-			Name:  v,
-			Value: requiredArgs[i+1],
-		})
-	}
-
-	return r.Commands
-
+// The Cli's getter for it's stored data
+func (c Cli) GetArguments() (string, int) {
+	return c.Subreddit, c.Limit
 }
 
-// Init takes os.args and initalizes the cli
-func (r *Cli) Init(args []string) {
-	values := r.ParseArgs(args)
+// Our provider for Cli
+// For this one, we are using the init function to parse and store the cli arguments
+func InitCli() ICli {
+	values := parseArgs(os.Args)
 
 	limit := LIMIT
 
@@ -66,5 +50,36 @@ func (r *Cli) Init(args []string) {
 
 	subr := values[0].Value
 
-	downloader.MakeRequestForReddit(subr, limit)
+	return Cli{Subreddit: subr, Limit: limit}
+}
+
+/***************************
+     Private Functions
+***************************/
+
+// ParseArgs takes in os.Args and parses the system args
+func parseArgs(args []string) []Command {
+	var commands []Command
+	requiredArgs := args[1:]
+
+	if !(len(requiredArgs) > 0) {
+		log.Fatal("No arguments were provided")
+	}
+
+	for i, v := range requiredArgs {
+		if i%2 == 1 {
+			continue
+		}
+
+		if i == 0 && v != "--subr" {
+			log.Fatal("First argument should be --subr _subredditname_")
+		}
+
+		commands = append(commands, Command{
+			Name:  v,
+			Value: requiredArgs[i+1],
+		})
+	}
+
+	return commands
 }

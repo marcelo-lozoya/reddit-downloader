@@ -43,17 +43,24 @@ type Data struct {
 	} `json:"data"`
 }
 
-func buildEndpoint(subr string, limit int) string {
-	return fmt.Sprintf("%s%s%s%s%d", ENDPOINT, subr, ".json?", "limit=", limit)
+// Our interface for the DirectoryHelper
+type IDownloader interface {
+	MakeRequestForReddit(subreddit string, limit int)
 }
 
-func getImageLink(url string) string {
-	return strings.Replace(url, "amp;", "", 1)
+// Our concrete implementation of the DirectoryHelper
+type CDownloader struct {
+	DirectoryHelper IDirectoryHelper
+}
+
+// Our provider for the DirectoryHelper
+func InitDownloader(dh IDirectoryHelper) IDownloader {
+	return CDownloader{DirectoryHelper: dh}
 }
 
 // MakeRequestForReddit takes in subreddit name and number of images to download
-func MakeRequestForReddit(subreddit string, limit int) {
-	createRequiredFolders(subreddit)
+func (d CDownloader) MakeRequestForReddit(subreddit string, limit int) {
+	d.DirectoryHelper.CreateRequiredFolders(subreddit)
 
 	uriString := buildEndpoint(subreddit, limit)
 
@@ -88,7 +95,7 @@ func MakeRequestForReddit(subreddit string, limit int) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Data: %+v\n", need)
+
 	for _, v := range need.Data.Children {
 		if v.Data.Preview.Images != nil && len(v.Data.Preview.Images) > 0 {
 			wg.Add(1)
@@ -101,13 +108,16 @@ func MakeRequestForReddit(subreddit string, limit int) {
 	wg.Wait()
 }
 
-func createRequiredFolders(sub string) {
-	if exists := checkIfDirExists(sub); !exists {
-		done := createDir(sub + "/")
-		if !done {
-			log.Fatal("Failed to create folder")
-		}
-	}
+/***************************
+     Private Functions
+***************************/
+
+func buildEndpoint(subr string, limit int) string {
+	return fmt.Sprintf("%s%s%s%s%d", ENDPOINT, subr, ".json?", "limit=", limit)
+}
+
+func getImageLink(url string) string {
+	return strings.Replace(url, "amp;", "", 1)
 }
 
 func downloadImage(url string, sub string) (bool, error) {
@@ -136,28 +146,4 @@ func downloadImage(url string, sub string) (bool, error) {
 	wg.Done()
 
 	return true, nil
-}
-
-func checkIfDirExists(folder string) bool {
-
-	homeDir, _ := os.UserHomeDir()
-
-	path := fmt.Sprintf("%s%s%s", homeDir, "/Documents/reddit-downloader/", folder)
-
-	if _, err := os.Stat(path); err != nil {
-		return false
-	}
-	return true
-}
-
-func createDir(folder string) bool {
-
-	homeDir, _ := os.UserHomeDir()
-	path := fmt.Sprintf("%s%s%s", homeDir, "/Documents/reddit-downloader/", folder)
-
-	if err := os.Mkdir(path, 0755); err != nil {
-		fmt.Println(err)
-		return false
-	}
-	return true
 }

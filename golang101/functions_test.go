@@ -1,4 +1,4 @@
-package presentation
+package golang101
 
 import "testing"
 
@@ -12,11 +12,6 @@ func Test_namedReturns(t *testing.T) {
 			name:  "test namedReturn - pass",
 			wantA: "a",
 			wantB: "b",
-		},
-		{
-			name:  "test namedReturn - fail",
-			wantA: "b",
-			wantB: "a",
 		},
 	}
 	for _, tt := range tests {
